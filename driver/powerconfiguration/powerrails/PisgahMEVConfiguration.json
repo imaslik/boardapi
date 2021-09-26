@@ -5,7 +5,8 @@
     "ClockPCIeGenerator": "6A",
     "ClockPCIePPM": "62",
     "HotPlugAdaptor": "21",
-    "PowerOnOffReg": "20"
+    "PowerOnOffReg": "20",
+    "LanPowerGood": "200"
   },
   "Rails": [
     {

@@ -3,6 +3,7 @@ import ctypes
 from sys import *
 import os
 import ast
+from driver.base import fpga
 
 if platform == "win32" or platform == "cli":
     site_root = os.path.dirname(os.path.realpath(__file__))
@@ -265,6 +266,11 @@ class BoardBase:
             self._fpga.write_ad5272(self.ftdi, dev_address, rdata, program_eeprom)
         except FpgaException as e:
             raise BoardBaseError(e.message)
+
+
+    def lan_power_good(self):
+        self.write_fpga(self.board_configurations["LanPowerGood"],"0")
+        self.write_fpga(self.board_configurations["LanPowerGood"],"1")
 
     def _power_on_off(self, operation):
         address = self.board_configurations["PowerOnOffReg"]
