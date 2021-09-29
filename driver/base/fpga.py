@@ -50,7 +50,7 @@ class FTDI:
         self.object = object
         self.index = index
 
-    def open(self, time_wait=0):
+    def open(self, time_wait=0.5):
         if self.object.status == 0:
             self.object = ftd2xx.open(self.index)
             self.object.resetDevice()
