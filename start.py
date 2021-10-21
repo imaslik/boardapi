@@ -32,6 +32,6 @@ if args.method != None and args.method != "":
         
     else:
         print(args.method[0] + " doesn't exist")
-        os._exit(0)
+        os._exit(1)
 
     

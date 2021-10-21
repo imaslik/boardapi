@@ -4,6 +4,21 @@ from sys import *
 import os
 import ast
 from driver.base import fpga
+import time
+import csv
+from datetime import datetime
+try:
+    from tabulate import tabulate
+except ImportError as e:
+    try:
+        import pip
+    except ImportError as e:
+        getpip.install_pip()
+    finally:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--proxy=https://proxy-chain.intel.com:911", "tabulate"])
+finally:
+    from tabulate import tabulate
+
 
 if platform == "win32" or platform == "cli":
     site_root = os.path.dirname(os.path.realpath(__file__))
@@ -206,6 +221,50 @@ class BoardBase:
 
     def get_board_info(self):
         return self.ftdi.object.__dict__
+
+    def read_all_rail_voltage(self):
+        for rail_name in self.rails:
+            print(f"{rail_name} voltage: "+ str(self.rails[rail_name].get_voltage(ActionTypeFPGA.NOTHING)))
+            
+    def read_all_rail_current(self):
+        for rail_name in self.rails:
+            print(f"{rail_name} current: "+ str(self.rails[rail_name].get_current()))
+
+
+    def read_all_loop(self, time_run=60, time_sleep=100):
+        os.system('clear')
+        self.ftdi.open()
+        counter = 0
+        header = list(self.rails.keys())
+        full_data = []
+        while time_run > 0:
+            counter += 1
+            data = []
+
+            start = time.perf_counter()
+            print(f"time run: {time_run}")
+            for rail_name in self.rails:
+                data.append(str(self.rails[rail_name].get_voltage(ActionTypeFPGA.NOTHING)))
+                #print(f"{rail_name} voltage: "+ str(self.rails[rail_name].get_voltage(ActionTypeFPGA.NOTHING)))
+            #self.read_all_rail_voltage()
+            
+            full_data.append(data)
+            #print("================================")
+            end = time.perf_counter()
+            time_run =time_run-(end-start)
+            os.system('clear')
+        self.ftdi.close()
+        print(tabulate(full_data, headers=header))
+        cur_time = datetime.utcnow().strftime('%Y%m%d%H%M%S%f')[:-3]
+        file_name = f"voltages_{cur_time}.csv"
+        with open(file_name, 'w', encoding='UTF8', newline='') as f:
+            writer = csv.writer(f)
+
+            # write the header
+            writer.writerow(header)
+
+            # write multiple rows
+            writer.writerows(full_data)
 
     def write_fpga(self, address, data):
         """

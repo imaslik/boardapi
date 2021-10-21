@@ -26,9 +26,10 @@ class PmbusRail(BaseRail):
         self._page_cmd = '00'
         self._vout_cmd = '21'
 
-    def get_voltage(self):
+    def get_voltage(self, action_type=ActionTypeFPGA.OPENCLOSE):
         try:
-            self._ftdi.open()
+            if action_type == ActionTypeFPGA.OPENCLOSE or action_type == ActionTypeFPGA.OPEN:
+                self._ftdi.open()
             if not self.check_power_good():
                 raise Exception(self.rail_name + "rail is off")
 
@@ -41,7 +42,8 @@ class PmbusRail(BaseRail):
 
             self._pmbus_enable_select(False)
 
-            self._ftdi.close()
+            if action_type == ActionTypeFPGA.OPENCLOSE or action_type == ActionTypeFPGA.CLOSE:
+                self._ftdi.close()
             return round(voltage_value, 4)
         except Exception as e:
             raise BaseRailError(e.message)

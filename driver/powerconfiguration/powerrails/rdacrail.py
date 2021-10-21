@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+
+from driver.powerconfiguration.powerenums import *
 from .baserail import BaseRail, BaseRailError
 
 
@@ -25,9 +27,10 @@ class RdacRail(BaseRail):
         self.i_read_linear = 0.0
         self.i_read_proportional = 0.0
 
-    def get_voltage(self):
+    def get_voltage(self, action_type=ActionTypeFPGA.OPENCLOSE):
         try:
-            self._ftdi.open()
+            if action_type == ActionTypeFPGA.OPENCLOSE or action_type == ActionTypeFPGA.OPEN:
+                self._ftdi.open()
             if not self.check_power_good():
                 raise Exception(self.rail_name + "rail is off")
 
@@ -40,7 +43,8 @@ class RdacRail(BaseRail):
             # voltage_value = (
             #         (((((int(hex_value, 16) * 20000) / 1024) + 49.9) / self.voltage_read_resolution) + 1) * self.vref)
 
-            self._ftdi.close()
+            if action_type == ActionTypeFPGA.OPENCLOSE or action_type == ActionTypeFPGA.CLOSE:
+                self._ftdi.close()
             return result
         except Exception as e:
             raise BaseRailError(str(e))
