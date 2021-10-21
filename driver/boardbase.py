@@ -231,7 +231,8 @@ class BoardBase:
             print(f"{rail_name} current: "+ str(self.rails[rail_name].get_current()))
 
 
-    def read_all_loop(self, time_run=60, time_sleep=100):
+    def read_all_voltages_loop(self, time_run=60, time_sleep=100):
+        time_run = float(time_run)
         os.system('clear')
         self.ftdi.open()
         counter = 0
