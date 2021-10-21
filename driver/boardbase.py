@@ -224,36 +224,52 @@ class BoardBase:
 
     def read_all_rail_voltage(self):
         for rail_name in self.rails:
-            print(f"{rail_name} voltage: "+ str(self.rails[rail_name].get_voltage(ActionTypeFPGA.NOTHING)))
+            print(f"{rail_name} voltage: "+ str(self.rails[rail_name].get_voltage()))
             
     def read_all_rail_current(self):
         for rail_name in self.rails:
             print(f"{rail_name} current: "+ str(self.rails[rail_name].get_current()))
 
 
-    def read_all_voltages_loop(self, time_run=60, time_sleep=100):
+    def read_measurement_loop(self, time_run, type, rail_names=None, time_sleep=0):
         time_run = float(time_run)
         os.system('clear')
         self.ftdi.open()
         counter = 0
+
         header = list(self.rails.keys())
+        if rail_names != None and rail_names != "":
+            header = rail_names.split()
+
         full_data = []
+        #rails = [rail for rail in self.rails if rail.rail_name in header]
         while time_run > 0:
             counter += 1
             data = []
 
             start = time.perf_counter()
             print(f"time run: {time_run}")
-            for rail_name in self.rails:
-                data.append(str(self.rails[rail_name].get_voltage(ActionTypeFPGA.NOTHING)))
+            for rail_name in header:
+                if type == "voltage":
+                    data.append(str(self.rails[rail_name].get_voltage(ActionTypeFPGA.NOTHING)))
+                elif type == "current":
+                     data.append(str(self.rails[rail_name].get_current(ActionTypeFPGA.NOTHING)))
+                else:
+                    break
                 #print(f"{rail_name} voltage: "+ str(self.rails[rail_name].get_voltage(ActionTypeFPGA.NOTHING)))
             #self.read_all_rail_voltage()
             
             full_data.append(data)
             #print("================================")
             end = time.perf_counter()
-            time_run =time_run-(end-start)
-            os.system('clear')
+            
+            time_diff = end-start
+            if time_sleep != 0 and int(time_sleep) - (end-start) > 0:
+                time_diff = int(time_sleep)
+                time.sleep(float(int(time_sleep) - (end-start)))
+
+            time_run =time_run-time_diff
+            #os.system('clear')
         self.ftdi.close()
         print(tabulate(full_data, headers=header))
         cur_time = datetime.utcnow().strftime('%Y%m%d%H%M%S%f')[:-3]

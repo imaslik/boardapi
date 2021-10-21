@@ -390,7 +390,7 @@ class FPGA:
             lsb_val = int(a2d_val, 16) & 0x1
             cycle_ctr = cycle_ctr + 1
 
-        ftdi.object.close()
+        #ftdi.object.close()
 
         return round(ref_voltage * int((a2d_val[-2:] + a2d_val[-4:-2]), 16) / 32768, 3)
 

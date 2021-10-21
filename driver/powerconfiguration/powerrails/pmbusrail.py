@@ -48,9 +48,10 @@ class PmbusRail(BaseRail):
         except Exception as e:
             raise BaseRailError(e.message)
 
-    def get_current(self):
+    def get_current(self, action_type=ActionTypeFPGA.OPENCLOSE):
         try:
-            self._ftdi.open()
+            if action_type == ActionTypeFPGA.OPENCLOSE or action_type == ActionTypeFPGA.OPEN:
+                self._ftdi.open()
             if not self.check_power_good():
                 raise Exception(self.rail_name + "rail is off")
 
@@ -65,8 +66,8 @@ class PmbusRail(BaseRail):
             current_value = i_11_bit_val * self.i_read_factor
 
             self._pmbus_enable_select(False)
-
-            self._ftdi.close()
+            if action_type == ActionTypeFPGA.OPENCLOSE or action_type == ActionTypeFPGA.CLOSE:
+                self._ftdi.close()
             return round(current_value, 4)
         except Exception as e:
             raise BaseRailError(e.message)

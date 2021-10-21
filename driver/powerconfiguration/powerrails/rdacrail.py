@@ -49,17 +49,25 @@ class RdacRail(BaseRail):
         except Exception as e:
             raise BaseRailError(str(e))
 
-    def get_current(self):
+    def get_current(self,action_type=ActionTypeFPGA.OPENCLOSE):
         try:
-            self._ftdi.open()
+            if action_type == ActionTypeFPGA.OPENCLOSE or action_type == ActionTypeFPGA.OPEN:
+                self._ftdi.open()
             if not self.check_power_good():
                 raise Exception(self.rail_name + "rail is off")
 
             if self.i_read_method.upper() == "ADS1112":
                 a2d_value = self._fpga.read_ads11112_a2d(self._ftdi, self.i_read_address, self.i_read_mode, self.i_read_vref)
+                if action_type == ActionTypeFPGA.OPENCLOSE or action_type == ActionTypeFPGA.CLOSE:
+                    self._ftdi.close()
                 return round((a2d_value - self.i_read_linear) * self.i_read_proportional, 3)
             elif self.i_read_method.upper() == "INA233A":
-                return self._fpga.read_ina233a_a2d(self._ftdi, self.i_read_address, self.max_current, self.i_read_rsense, "i")
+                value = self._fpga.read_ina233a_a2d(self._ftdi, self.i_read_address, self.max_current, self.i_read_rsense, "i")
+                if action_type == ActionTypeFPGA.OPENCLOSE or action_type == ActionTypeFPGA.CLOSE:
+                        self._ftdi.close()
+                return value
+            if action_type == ActionTypeFPGA.OPENCLOSE or action_type == ActionTypeFPGA.CLOSE:
+                self._ftdi.close()
             return 0.0
         except Exception as e:
             raise BaseRailError(str(e))
