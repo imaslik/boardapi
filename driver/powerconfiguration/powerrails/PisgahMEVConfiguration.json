@@ -6,7 +6,10 @@
     "ClockPCIePPM": "62",
     "HotPlugAdaptor": "21",
     "PowerOnOffReg": "20",
-    "LanPowerGood": "200"
+    "LanPowerGood": "200",
+    "TempControlDeviceReg": "2D",
+    "TempControlOffsetReg": "70",
+    "TempOffset":  "-4"
   },
   "Rails": [
     {
