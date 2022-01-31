@@ -230,8 +230,35 @@ class BoardBase:
         for rail_name in self.rails:
             print(f"{rail_name} current: "+ str(self.rails[rail_name].get_current()))
 
+    def _set_thermal_diode_offset(self):
+        tempControlDeviceReg = self.board_configurations["TempControlDeviceReg"];
+        offsetReg = self.board_configurations["TempControlOffsetReg"];
+        offsetTemp = int(self.board_configurations["TempOffset"]) << 1;
 
-    def read_measurement_loop(self, time_run, type, rail_names=None, time_sleep=0):
+        hexOffset = '{:02X}'.format(offsetTemp & ((1<<8) -1 ))
+        self._fpga.write_i2c_dev(self.ftdi,tempControlDeviceReg, offsetReg, hexOffset, 1, 1);
+
+    def read_temperature_diode(self):
+        self.ftdi.open()
+        temperature = self._read_temperature_diode()
+        self.ftdi.close()
+        return temperature
+        
+    def _read_temperature_diode(self):
+        #self.ftdi.open()
+        tempControlDeviceReg = self.board_configurations["TempControlDeviceReg"]
+        self._set_thermal_diode_offset()
+        reg25 = self._fpga.read_i2c_dev(self.ftdi, tempControlDeviceReg, "25", 1, 1)
+        reg77 = self._fpga.read_i2c_dev(self.ftdi, tempControlDeviceReg, "77", 1, 1)
+        
+        zero = 64
+        temp_after_point = ((int(reg77,16) >> 2) & 0x3) / 4.0
+        temp_before_point = (int(reg25,16) & 0xff) - zero
+        #self.ftdi.close()
+        return temp_before_point + temp_after_point
+        
+        
+    def read_measurement_loop(self, time_run, type, rail_names=None, diode=None, time_sleep=0):
         time_run = float(time_run)
         os.system('clear')
         self.ftdi.open()
@@ -240,6 +267,9 @@ class BoardBase:
         header = list(self.rails.keys())
         if rail_names != None and rail_names != "":
             header = rail_names.split()
+        
+        if diode != None and diode != "":
+            header.append("Diode")
 
         full_data = []
         #rails = [rail for rail in self.rails if rail.rail_name in header]
@@ -250,12 +280,15 @@ class BoardBase:
             start = time.perf_counter()
             print(f"time run: {time_run}")
             for rail_name in header:
-                if type == "voltage":
-                    data.append(str(self.rails[rail_name].get_voltage(ActionTypeFPGA.NOTHING)))
-                elif type == "current":
-                     data.append(str(self.rails[rail_name].get_current(ActionTypeFPGA.NOTHING)))
-                else:
-                    break
+                if rail_name == "Diode":
+                    data.append(str(self._read_temperature_diode()))
+                else:    
+                    if type == "voltage":
+                        data.append(str(self.rails[rail_name].get_voltage(ActionTypeFPGA.NOTHING)))
+                    elif type == "current":
+                        data.append(str(self.rails[rail_name].get_current(ActionTypeFPGA.NOTHING)))
+                    else:
+                        break
                 #print(f"{rail_name} voltage: "+ str(self.rails[rail_name].get_voltage(ActionTypeFPGA.NOTHING)))
             #self.read_all_rail_voltage()
             
@@ -273,7 +306,7 @@ class BoardBase:
         self.ftdi.close()
         print(tabulate(full_data, headers=header))
         cur_time = datetime.utcnow().strftime('%Y%m%d%H%M%S%f')[:-3]
-        file_name = f"voltages_{cur_time}.csv"
+        file_name = f"{type}s_{cur_time}.csv"
         with open(file_name, 'w', encoding='UTF8', newline='') as f:
             writer = csv.writer(f)
 
