@@ -38,11 +38,10 @@ class RdacRail(BaseRail):
                 result = self._fpga.read_ad7998(self._ftdi,self.v_read_address, self.v_read_port, self.v_read_vref)
             elif self.v_read_method.upper() == "PMB":
                 result = self._fpga.read_ina233a_a2d(self._ftdi, self.i_read_address, self.max_current, self.i_read_rsense, "v")
-            # hex_value = self._fpga.read_ad5272(self._ftdi, self.rdac_address)
-            # print(hex_value)
-            # voltage_value = (
-            #         (((((int(hex_value, 16) * 20000) / 1024) + 49.9) / self.voltage_read_resolution) + 1) * self.vref)
-
+            elif self.v_read_method.upper() == "AD5272":
+                hex_value = self._fpga.read_ad5272(self._ftdi, self.rdac_address)
+                result = ((((((int(hex_value, 16) * self.max_value) / self.voltage_read_resolution) + self.r_up) / self.r_down) + 1) * self.vref)
+         
             if action_type == ActionTypeFPGA.OPENCLOSE or action_type == ActionTypeFPGA.CLOSE:
                 self._ftdi.close()
             return result
