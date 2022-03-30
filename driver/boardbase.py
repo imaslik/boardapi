@@ -118,6 +118,7 @@ class BoardBase:
             "000F": 3200
         }
         self.set_rails()
+        self._set_thermal_diode_offset()
 
     @staticmethod
     def _get_ftdi(board_name):
@@ -231,12 +232,15 @@ class BoardBase:
             print(f"{rail_name} current: "+ str(self.rails[rail_name].get_current()))
 
     def _set_thermal_diode_offset(self):
-        tempControlDeviceReg = self.board_configurations["TempControlDeviceReg"];
-        offsetReg = self.board_configurations["TempControlOffsetReg"];
-        offsetTemp = int(self.board_configurations["TempOffset"]) << 1;
+        try:
+            tempControlDeviceReg = self.board_configurations["TempControlDeviceReg"];
+            offsetReg = self.board_configurations["TempControlOffsetReg"];
+            offsetTemp = int(self.board_configurations["TempOffset"]) << 1;
 
-        hexOffset = '{:02X}'.format(offsetTemp & ((1<<8) -1 ))
-        self._fpga.write_i2c_dev(self.ftdi,tempControlDeviceReg, offsetReg, hexOffset, 1, 1);
+            hexOffset = '{:02X}'.format(offsetTemp & ((1<<8) -1 ))
+            self._fpga.write_i2c_dev(self.ftdi,tempControlDeviceReg, offsetReg, hexOffset, 1, 1)
+        except Exception as ex:
+            pass
 
     def read_temperature_diode(self):
         self.ftdi.open()
@@ -247,7 +251,6 @@ class BoardBase:
     def _read_temperature_diode(self):
         #self.ftdi.open()
         tempControlDeviceReg = self.board_configurations["TempControlDeviceReg"]
-        self._set_thermal_diode_offset()
         reg25 = self._fpga.read_i2c_dev(self.ftdi, tempControlDeviceReg, "25", 1, 1)
         reg77 = self._fpga.read_i2c_dev(self.ftdi, tempControlDeviceReg, "77", 1, 1)
         
@@ -256,6 +259,18 @@ class BoardBase:
         temp_before_point = (int(reg25,16) & 0xff) - zero
         #self.ftdi.close()
         return temp_before_point + temp_after_point
+        
+    def set_rail_voltage(self, rail_name, value):
+        try:
+            value = float(value)
+            voltage_value = self.rails[rail_name].get_voltage()
+            print("Voltage value for rail {} before changing: {}".format(rail_name,voltage_value))
+            self.rails[rail_name].set_voltage(value)
+            voltage_value = self.rails[rail_name].get_voltage()
+            print("Voltage value for rail {} after changing: {}".format(rail_name,voltage_value))
+        except Exception as ex:
+            print(ex)
+            print("Please set correct rail name or value")
         
         
     def read_measurement_loop(self, time_run, type, rail_names=None, diode=None, time_sleep=0):
