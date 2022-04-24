@@ -21,19 +21,19 @@ finally:
 
 
 if platform == "win32" or platform == "cli":
-    site_root = os.path.dirname(os.path.realpath(__file__))
-    parent_root = os.path.abspath(os.path.join(site_root, os.pardir))
+    site_root = os.path.dirname( os.path.realpath(__file__))
+    parent_root =  os.path.abspath( os.path.join(site_root, os.pardir))
     path.append(parent_root)
     path.append(site_root)
-    path.append(os.path.join(site_root, "base"))
-    path.append(os.path.join(site_root, "powerconfiguration"))
-    path.append(os.path.join(site_root, "powerconfiguration", "powerrails"))
+    path.append( os.path.join(site_root, "base"))
+    path.append( os.path.join(site_root, "powerconfiguration"))
+    path.append( os.path.join(site_root, "powerconfiguration", "powerrails"))
 elif platform == "linux":
-    path.append('/home/laduser/boardserver/driver/powerconfiguration/powerrails')
-    path.append('/home/laduser/boardserver/driver/powerconfiguration')
-    path.append('/home/laduser/boardserver/driver/base')
-    path.append('/home/laduser/boardserver/driver')
-    path.append('/home/laduser/boardserver')
+    curret_file =  os.path.dirname(os.path.realpath(__file__))
+    path.append(f'{curret_file}/driver/powerconfiguration/powerrails')
+    path.append(f'{curret_file}/driver/powerconfiguration')
+    path.append(f'{curret_file}/driver/base')
+    path.append(f'{curret_file}/driver')
 
 from driver.base.ftdidetecteddevices import *
 from driver.base.fpga import FTDI
@@ -78,7 +78,7 @@ class BoardBaseError(Exception):
 
 
 def _get_config_file():
-    file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "powerconfiguration", "powerrails", "PisgahMEVConfiguration.json")
+    file_path =  os.path.join(os.path.dirname(os.path.realpath(__file__)), "powerconfiguration", "powerrails", "PisgahMEVConfiguration.json")
 
     if os.path.exists(file_path):
         return file_path
@@ -118,13 +118,13 @@ class BoardBase:
             "000F": 3200
         }
         self.set_rails()
-        self._set_thermal_diode_offset()
+        self.__set_thermal_diode_offset()
 
     @staticmethod
     def _get_ftdi(board_name):
         try:
             if board_name is None:
-                device_info = next((device for device in ftdi_devices.devices_info if str(device['description'].decode()).upper().endswith(" B")),
+                device_info = next((device for device in ftdi_devices.devices_info if str(device['description'].decode()).upper().startswith("PISGAH") and str(device['description'].decode()).upper().endswith(" B")),
                      False)
                 board_name = ''
             else:
@@ -231,7 +231,7 @@ class BoardBase:
         for rail_name in self.rails:
             print(f"{rail_name} current: "+ str(self.rails[rail_name].get_current()))
 
-    def _set_thermal_diode_offset(self):
+    def __set_thermal_diode_offset(self):
         try:
             tempControlDeviceReg = self.board_configurations["TempControlDeviceReg"];
             offsetReg = self.board_configurations["TempControlOffsetReg"];
@@ -251,8 +251,9 @@ class BoardBase:
     def _read_temperature_diode(self):
         #self.ftdi.open()
         tempControlDeviceReg = self.board_configurations["TempControlDeviceReg"]
-        reg25 = self._fpga.read_i2c_dev(self.ftdi, tempControlDeviceReg, "25", 1, 1)
-        reg77 = self._fpga.read_i2c_dev(self.ftdi, tempControlDeviceReg, "77", 1, 1)
+        for i in range(5):
+            reg25 = self._fpga.read_i2c_dev(self.ftdi, tempControlDeviceReg, "25", 1, 1)
+            reg77 = self._fpga.read_i2c_dev(self.ftdi, tempControlDeviceReg, "77", 1, 1)
         
         zero = 64
         temp_after_point = ((int(reg77,16) >> 2) & 0x3) / 4.0
@@ -296,7 +297,7 @@ class BoardBase:
             print(f"time run: {time_run}")
             for rail_name in header:
                 if rail_name == "Diode":
-                    data.append(str(self._read_temperature_diode()))
+                    data.append(str(self.__read_temperature_diode()))
                 else:    
                     if type == "voltage":
                         data.append(str(self.rails[rail_name].get_voltage(ActionTypeFPGA.NOTHING)))

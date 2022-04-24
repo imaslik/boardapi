@@ -54,6 +54,12 @@ class FTDI:
         if self.object.status == 0:
             self.object = ftd2xx.open(self.index)
             self.object.resetDevice()
+            
+            self.object.setBaudRate(12000000)
+            self.object.setDataCharacteristics(8, 0, 0)
+            self.object.setFlowControl(0x0100, 0x11, 0x13)
+            self.object.setTimeouts(5000, 5000)
+            self.object.setLatencyTimer(2)
             time.sleep(time_wait)
 
     def close(self):
@@ -97,10 +103,10 @@ class FPGA:
             if action_type == ActionTypeFPGA.OPENCLOSE or action_type == ActionTypeFPGA.OPEN:
                 ftdi.open()
 
-            ftdi.object.setBaudRate(12000000)
-            ftdi.object.setDataCharacteristics(8, 0, 0)
-            ftdi.object.setFlowControl(0x0100, 0x11, 0x13)
-            ftdi.object.setTimeouts(5000, 5000)
+            # ftdi.object.setBaudRate(12000000)
+            # ftdi.object.setDataCharacteristics(8, 0, 0)
+            # ftdi.object.setFlowControl(0x0100, 0x11, 0x13)
+            # ftdi.object.setTimeouts(5000, 5000)
 
             ftdi.object.write(bytes(self._FT_Out_Buffer))
             length_rx_bytes = 0
