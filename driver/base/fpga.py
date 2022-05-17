@@ -110,9 +110,9 @@ class FPGA:
 
             ftdi.object.write(bytes(self._FT_Out_Buffer))
             length_rx_bytes = 0
-            for delay_counter in range(0, 50):
+            for delay_counter in range(0, 100000):
                 length_rx_bytes = ftdi.object.getQueueStatus()
-                time.sleep(0.005)
+                #time.sleep(0.005)
                 if length_rx_bytes == 4 * num_of_words + 2:
                     break
             if length_rx_bytes == 0:
@@ -299,7 +299,7 @@ class FPGA:
             # ftdi.open()
             self.write_to_fpga_memory(ftdi, '5001', reg_address, action_type=action_type)
             self.write_to_fpga_memory(ftdi, '5000', dev_address + str(num_pre_write_bytes) + str(num_of_bytes) + '02')
-            time.sleep(0.005)
+            #time.sleep(0.005)
             self.read_from_fpga_memory(ftdi, '5000', 1)
             if self.Dword_From_FPGA[-1] == '8':
                 raise Exception('Read failed from address: ' + dev_address)

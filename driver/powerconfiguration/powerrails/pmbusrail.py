@@ -54,10 +54,12 @@ class PmbusRail(BaseRail):
                 self._ftdi.open()
             if not self.check_power_good():
                 raise Exception(self.rail_name + "rail is off")
-
+            import time
+            
             self._pmbus_enable_select(True)
             self._fpga.write_i2c_dev(self._ftdi, self.pmbus_address, self._page_cmd, self.rail_page_number, 1,
                                      1)  # change to the right page number
+
             hex_data = self._fpga.read_i2c_dev(self._ftdi, self.pmbus_address, self.read_i_out_address, 2, 1)
            
             #print(hex_data)
@@ -66,6 +68,7 @@ class PmbusRail(BaseRail):
             current_value = i_11_bit_val * self.i_read_factor
 
             self._pmbus_enable_select(False)
+ 
             if action_type == ActionTypeFPGA.OPENCLOSE or action_type == ActionTypeFPGA.CLOSE:
                 self._ftdi.close()
             return round(current_value, 4)
@@ -99,6 +102,6 @@ class PmbusRail(BaseRail):
             self._fpga.write_to_fpga_memory(self._ftdi, self._board_configurations["PMBusMuxEn"], '00000000')  # PM Bus Mux Enabled
             self._fpga.write_to_fpga_memory(self._ftdi, self._board_configurations["PMBusMuxSel"], '00000001')  # PM Bus Mux Selected
         else:
-            self._fpga.write_to_fpga_memory(self._ftdi, self._board_configurations["PMBusMuxEn"], '00000001')  # PM Bus Mux Disabled
+            self._fpga.write_to_fpga_memory(self._ftdi, self._board_configurations["PMBusMuxEn"], '00000000')  # PM Bus Mux Disabled
             self._fpga.write_to_fpga_memory(self._ftdi, self._board_configurations["PMBusMuxSel"], '00000000')  # PM Bus Mux Unselected
 
