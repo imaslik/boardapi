@@ -95,7 +95,6 @@ class BoardBase:
             ftdi_object, ftdi_index = self._get_ftdi(board_name)
         self.config_file = _get_config_file()
         self.ftdi = FTDI(ftdi_object, ftdi_index)
-        self.ftdi.close()
         self._fpga = FPGA()
         self._flash = Flash()
         self.rails = {}
@@ -119,6 +118,8 @@ class BoardBase:
         }
         self.set_rails()
         self.__set_thermal_diode_offset()
+        self.ftdi.close()
+        
 
     @staticmethod
     def _get_ftdi(board_name):
@@ -240,8 +241,9 @@ class BoardBase:
             hexOffset = '{:02X}'.format(offsetTemp & ((1<<8) -1 ))
             self._fpga.write_i2c_dev(self.ftdi,tempControlDeviceReg, offsetReg, hexOffset, 1, 1)
         except Exception as ex:
+            print(ex)
             pass
-
+        
     def read_temperature_diode(self):
         self.ftdi.open()
         temperature = self._read_temperature_diode()
@@ -251,7 +253,7 @@ class BoardBase:
     def _read_temperature_diode(self):
         #self.ftdi.open()
         tempControlDeviceReg = self.board_configurations["TempControlDeviceReg"]
-        for i in range(5):
+        for i in range(15):
             reg25 = self._fpga.read_i2c_dev(self.ftdi, tempControlDeviceReg, "25", 1, 1)
             reg77 = self._fpga.read_i2c_dev(self.ftdi, tempControlDeviceReg, "77", 1, 1)
         

@@ -386,7 +386,7 @@ class FPGA:
         cycle_ctr = 0
 
         self.write_i2c_dev(ftdi, dev_address, "0", a2d_commnad[config_mode], 1, 0)
-        time.sleep(0.15)
+        #time.sleep(0.15)
 
         lsb_val = 1
         a2d_val = ""
