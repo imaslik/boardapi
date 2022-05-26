@@ -44,7 +44,7 @@ class PmbusRail(BaseRail):
 
             if action_type == ActionTypeFPGA.OPENCLOSE or action_type == ActionTypeFPGA.CLOSE:
                 self._ftdi.close()
-            return round(voltage_value, 4)
+            return voltage_value
         except Exception as e:
             raise BaseRailError(e.message)
 
@@ -71,7 +71,7 @@ class PmbusRail(BaseRail):
  
             if action_type == ActionTypeFPGA.OPENCLOSE or action_type == ActionTypeFPGA.CLOSE:
                 self._ftdi.close()
-            return round(current_value, 4)
+            return current_value
         except Exception as e:
             raise BaseRailError(e.message)
 
