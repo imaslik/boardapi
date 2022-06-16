@@ -110,9 +110,9 @@ class FPGA:
 
             ftdi.object.write(bytes(self._FT_Out_Buffer))
             length_rx_bytes = 0
-            for delay_counter in range(0, 50):
+            for delay_counter in range(0, 100000):
                 length_rx_bytes = ftdi.object.getQueueStatus()
-                time.sleep(0.005)
+                #time.sleep(0.005)
                 if length_rx_bytes == 4 * num_of_words + 2:
                     break
             if length_rx_bytes == 0:
@@ -299,7 +299,7 @@ class FPGA:
             # ftdi.open()
             self.write_to_fpga_memory(ftdi, '5001', reg_address, action_type=action_type)
             self.write_to_fpga_memory(ftdi, '5000', dev_address + str(num_pre_write_bytes) + str(num_of_bytes) + '02')
-            time.sleep(0.005)
+            #time.sleep(0.005)
             self.read_from_fpga_memory(ftdi, '5000', 1)
             if self.Dword_From_FPGA[-1] == '8':
                 raise Exception('Read failed from address: ' + dev_address)
@@ -335,7 +335,7 @@ class FPGA:
 
     def read_ad7998(self, ftdi, dev_address, port_number, a2d_vref):
         a2d_read = self.read_i2c_dev(ftdi, dev_address, hex(port_number + 7)[2:] + "0", 2, 1)
-        return round((a2d_vref * int(a2d_read[-1] + a2d_read[-4:-2], 16)) / 4096, 2)
+        return (a2d_vref * int(a2d_read[-1] + a2d_read[-4:-2], 16)) / 4096
 
     def read_ad5272(self, ftdi, dev_address):
         """
@@ -386,7 +386,7 @@ class FPGA:
         cycle_ctr = 0
 
         self.write_i2c_dev(ftdi, dev_address, "0", a2d_commnad[config_mode], 1, 0)
-        time.sleep(0.15)
+        #time.sleep(0.15)
 
         lsb_val = 1
         a2d_val = ""
@@ -398,7 +398,7 @@ class FPGA:
 
         #ftdi.object.close()
 
-        return round(ref_voltage * int((a2d_val[-2:] + a2d_val[-4:-2]), 16) / 32768, 3)
+        return ref_voltage * int((a2d_val[-2:] + a2d_val[-4:-2]), 16) / 32768
 
     def read_ina233a_a2d(self, ftdi, dev_address, max_current, rsense_mohm, type = "i"):
         """
@@ -416,10 +416,10 @@ class FPGA:
         # v_out = round(int(a2d_val, 16) / 800.0, 3)
         if type == "i":
             a2d_val = self.read_i2c_dev(ftdi, dev_address, "8C", 2, 1)
-            return round(get_pos_or_neg_value(int(a2d_val, 16)) * cur_lsb, 4)
+            return get_pos_or_neg_value(int(a2d_val, 16)) * cur_lsb
         if type == "v":
             a2d_val = self.read_i2c_dev(ftdi, dev_address, "88", 2, 1)
-            return round(get_pos_or_neg_value(int(a2d_val, 16)) / 800.0, 4)
+            return get_pos_or_neg_value(int(a2d_val, 16)) / 800.0
 
         return 0.0
 

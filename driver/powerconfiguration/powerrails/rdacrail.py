@@ -59,7 +59,7 @@ class RdacRail(BaseRail):
                 a2d_value = self._fpga.read_ads11112_a2d(self._ftdi, self.i_read_address, self.i_read_mode, self.i_read_vref)
                 if action_type == ActionTypeFPGA.OPENCLOSE or action_type == ActionTypeFPGA.CLOSE:
                     self._ftdi.close()
-                return round((a2d_value - self.i_read_linear) * self.i_read_proportional, 3)
+                return (a2d_value - self.i_read_linear) * self.i_read_proportional
             elif self.i_read_method.upper() == "INA233A":
                 value = self._fpga.read_ina233a_a2d(self._ftdi, self.i_read_address, self.max_current, self.i_read_rsense, "i")
                 if action_type == ActionTypeFPGA.OPENCLOSE or action_type == ActionTypeFPGA.CLOSE:
