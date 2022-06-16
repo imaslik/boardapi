@@ -14,8 +14,8 @@ def start_burn(**kwargs):
 
     if file_path is None:
         raise Exception("File path argument doesn't exist")
-    if board_name is None:
-        raise Exception("Board name argument doesn't exist")
+    # if board_name is None:
+    #     raise Exception("Board name argument doesn't exist")
 
     file_path = r"" + options.file_path + ""
 
@@ -25,11 +25,14 @@ def start_burn(**kwargs):
     with open(file_path, "rb") as fileRead:
         image_bytes = bytearray(fileRead.read())
 
-    print("Create " + board_name)
+    
     # file_path = r"\\ladhfs\ev\Sys1\CVL\Regression_Lab\NVMs\CVL_2.2_Beta_can1\CVL_SD_M2p60_50G_FW_1p5p2p1_NCSI_1PORT_BACKPLANE_5.49_Revision\CVL_SD_M2p60_50G_FW_1p5p2p1_NCSI_1PORT_BACKPLANE_5.49_Revision_8000438E_NOPLDMH.bin"
 
     file_name, file_extension = os.path.splitext(file_path)
     board = BoardBase(board_name)
+    board_name = board.get_board_info()["description"]
+    print("Created " + board_name)
+    
     status, message = board.burn_flash(image_bytes, file_extension[1:])
 
     if not status:
